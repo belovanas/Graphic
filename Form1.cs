@@ -8,170 +8,53 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Test2
+namespace Task2._2
 {
-    public partial class Form1 : Form
-    {
-        byte[] rgbValues1, rgbValues2, rgbValues3;
-        double[] hsvValues2, hsvValues3;
-        double hue_change, saturation_change, value_change = 0;
+	public partial class Form1 : Form
+	{
 
-        //Применение введенных пользователем изменений
+		int[] countRed, countGreen, countBlue;
+        int width = 1;
+		public Form1()
+		{
+			InitializeComponent();
+			pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox5.SizeMode = PictureBoxSizeMode.StretchImage;
+        }
+
+		byte[] rgbValuesRed, rgbValuesGreen, rgbValuesBlue;
+		private void Form1_Load(object sender, EventArgs e)
+		{
+
+		}
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.Cancel)
+                return;
+            label1.Text = openFileDialog1.FileName;
+        }
+
         private void button2_Click(object sender, EventArgs e)
-        {
-            pictureBox3.Image = (Bitmap)pictureBox2.Image.Clone();
-
-            hue_change = Convert.ToDouble(textBox1.Text);
-            saturation_change = Convert.ToDouble(textBox2.Text);
-            value_change = Convert.ToDouble(textBox3.Text);
-
-            Bitmap bmp3 = pictureBox3.Image as Bitmap;
-            Rectangle rect3 = new Rectangle(0, 0, bmp3.Width, bmp3.Height);
-            System.Drawing.Imaging.BitmapData bmpData3 =
-                bmp3.LockBits(rect3, System.Drawing.Imaging.ImageLockMode.ReadWrite,
-                bmp3.PixelFormat);
-            IntPtr ptr3 = bmpData3.Scan0;
-            int bytes3 = Math.Abs(bmpData3.Stride) * bmp3.Height;
-            System.Runtime.InteropServices.Marshal.Copy(ptr3, rgbValues3, 0, bytes3);
-            ColorToHSV(rgbValues3, hsvValues3, bytes3);
-            bmp3.UnlockBits(bmpData3);
-
-            int i = 0;
-            for (int counter = 0; counter < rgbValues1.Length; counter += 3)
-            {
-                bmp3.SetPixel(i % bmp3.Width, i / bmp3.Width,
-                    ColorFromHSV(hsvValues3[counter + 2], hsvValues3[counter + 1], hsvValues3[counter]));
-                i++;
-
-            }
-
-            pictureBox3.Refresh();
-            Bitmap bmpSave = (Bitmap)pictureBox3.Image;
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.DefaultExt = "test3img";
-            sfd.Filter = "Image files (*.bmp)|*.bmp|All files (*.*)|*.*";
-            if (sfd.ShowDialog() == DialogResult.OK)
-
-                bmpSave.Save(sfd.FileName, System.Drawing.Imaging.ImageFormat.Bmp);
-                
-        }
-
-
-
-        bool is_equal(double x, double y)
-        {
-            return Math.Abs(x - y) < 0.0001;
-        }
-
-        public void ColorToHSV(byte[] rgbValues, double[] hsvValues, int bytes)
-        {
-            for (int counter = 0; counter < bytes; counter += 3)
-            {
-               /* Console.WriteLine(rgbValues[counter + 2]);
-                Console.WriteLine(rgbValues[counter + 1]);
-                Console.WriteLine(rgbValues[counter]);*/
-                double red = rgbValues[counter + 2] / 255d;
-                double green = rgbValues[counter + 1] / 255d;
-                double blue = rgbValues[counter] / 255d;
-                double max = Math.Max(red, Math.Max(green, blue));
-                double min = Math.Min(red, Math.Min(green, blue));
-              //  Console.WriteLine();
-
-                double hue = 0;
-                if (is_equal(max, min))
-                    hue = 0;
-                else if (is_equal(max, red))
-                {
-                    if (green < blue)
-                        hue = 60d * (green - blue) / (max - min) + 360;
-                    else
-                        hue = 60d * (green - blue) / (max - min);
-                }
-                else if (is_equal(max, green))
-                {
-                    hue = 60d * (blue - red) / (max - min) + 120;
-                }
-                else if (is_equal(max, blue))
-                {
-                    hue = 60d * (red - green) / (max - min) + 240;
-                }
-
-
-                double saturantion = 0;
-                if (!is_equal(max, 0))
-                {
-                    saturantion = (max - min) / max;
-                }
-                double value = max;
-
-                hue = (hue + hue_change) % 360;
-                saturantion = (saturantion + saturation_change / 100) % 1;
-                value = (value + value_change / 100) % 1;
-
-                hsvValues[counter] = hue;
-                hsvValues[counter + 1] = saturantion;
-                hsvValues[counter + 2] = value;
-
-               /* Console.WriteLine(hsvValues[counter + 2]);
-                Console.WriteLine(hsvValues[counter + 1]);
-                Console.WriteLine(hsvValues[counter]);
-                Console.WriteLine();
-                Console.WriteLine();*/
-            }
-        }
-
-        public static Color ColorFromHSV(double hue, double saturation, double value)
-        {
-            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
-            double f = hue / 60 - Math.Floor(hue / 60);
-
-            value = value * 255;
-            int v = Convert.ToInt32(value);
-            int p = Convert.ToInt32(value * (1 - saturation));
-            int q = Convert.ToInt32(value * (1 - f * saturation));
-            int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
-
-            if (hi == 0)
-                return Color.FromArgb(255, v, t, p);
-            else if (hi == 1)
-                return Color.FromArgb(255, q, v, p);
-            else if (hi == 2)
-                return Color.FromArgb(255, p, v, t);
-            else if (hi == 3)
-                return Color.FromArgb(255, p, q, v);
-            else if (hi == 4)
-                return Color.FromArgb(255, t, p, v);
-            else
-                return Color.FromArgb(255, v, p, q);
-        }
-
-        public void textbox_SetText()
-        {
-            if (textBox1.Text.Length == 0)
-            {
-                this.textBox1.Text = "0";
-                this.textBox2.Text = "0";
-                this.textBox3.Text = "0";
-            }
-        }
-
-
-
-        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
-        {
-            string pict = openFileDialog1.FileName;
-            pictureBox1.Image = Bitmap.FromFile(pict);
-            pictureBox2.Image = Bitmap.FromFile(pict);
-            pictureBox3.Image = Bitmap.FromFile(pict);
+		{
+			pictureBox1.Image = Bitmap.FromFile(label1.Text);
+            pictureBox3.Image = Bitmap.FromFile(label1.Text);
+            pictureBox5.Image = Bitmap.FromFile(label1.Text);
+			Graphics g1 = Graphics.FromImage(pictureBox1.Image);
+            Graphics g2 = Graphics.FromImage(pictureBox3.Image);
+            Graphics g3 = Graphics.FromImage(pictureBox5.Image);
             Bitmap bmp1 = pictureBox1.Image as Bitmap;
-            Bitmap bmp2 = pictureBox2.Image as Bitmap;
-            Bitmap bmp3 = pictureBox3.Image as Bitmap;
+            Bitmap bmp2 = pictureBox3.Image as Bitmap;
+            Bitmap bmp3 = pictureBox5.Image as Bitmap;
+
+            width = System.Drawing.Image.FromFile(label1.Text).Width / 2;
 
             // Lock the bitmap's bits.  
             Rectangle rect1 = new Rectangle(0, 0, bmp1.Width, bmp1.Height);
-            System.Drawing.Imaging.BitmapData bmpData1 =
-                bmp1.LockBits(rect1, System.Drawing.Imaging.ImageLockMode.ReadWrite,
-                bmp1.PixelFormat);
+			System.Drawing.Imaging.BitmapData bmpData1 =
+				bmp1.LockBits(rect1, System.Drawing.Imaging.ImageLockMode.ReadWrite,
+				bmp1.PixelFormat);
             Rectangle rect2 = new Rectangle(0, 0, bmp2.Width, bmp2.Height);
             System.Drawing.Imaging.BitmapData bmpData2 =
                 bmp2.LockBits(rect2, System.Drawing.Imaging.ImageLockMode.ReadWrite,
@@ -188,27 +71,35 @@ namespace Test2
 
             // Declare an array to hold the bytes of the bitmap.
             int bytes1 = Math.Abs(bmpData1.Stride) * bmp1.Height;
+			rgbValuesRed = new byte[bytes1];
             int bytes2 = Math.Abs(bmpData2.Stride) * bmp2.Height;
+            rgbValuesGreen = new byte[bytes2];
             int bytes3 = Math.Abs(bmpData3.Stride) * bmp3.Height;
-            rgbValues1 = new byte[bytes1];
-            rgbValues2 = new byte[bytes2];
-            rgbValues3 = new byte[bytes3];
-            hsvValues2 = new double[bytes2];
-            hsvValues3 = new double[bytes3];
+            rgbValuesBlue = new byte[bytes3];
 
             // Copy the RGB values into the array.
-            System.Runtime.InteropServices.Marshal.Copy(ptr1, rgbValues1, 0, bytes1);
-            System.Runtime.InteropServices.Marshal.Copy(ptr2, rgbValues2, 0, bytes2);
-            System.Runtime.InteropServices.Marshal.Copy(ptr3, rgbValues3, 0, bytes3);
+            System.Runtime.InteropServices.Marshal.Copy(ptr1, rgbValuesRed, 0, bytes1);
+            System.Runtime.InteropServices.Marshal.Copy(ptr2, rgbValuesGreen, 0, bytes2);
+            System.Runtime.InteropServices.Marshal.Copy(ptr3, rgbValuesBlue, 0, bytes3);
 
-            ColorToHSV(rgbValues2, hsvValues2, bytes1);
-            ColorToHSV(rgbValues3, hsvValues3, bytes1);
+            // Set every third value to 255. A 24bpp bitmap will look red.  
+            for (int counter = 0; counter < rgbValuesRed.Length; counter += 3)
+			{
+				rgbValuesRed[counter+1] = 0;
+				rgbValuesRed[counter] = 0;
 
+                rgbValuesGreen[counter + 2] = 0;
+                rgbValuesGreen[counter] = 0;
 
-            // Copy the RGB values back to the bitmap
-            System.Runtime.InteropServices.Marshal.Copy(rgbValues1, 0, ptr1, bytes1);
-            System.Runtime.InteropServices.Marshal.Copy(rgbValues2, 0, ptr2, bytes2);
-            System.Runtime.InteropServices.Marshal.Copy(rgbValues3, 0, ptr3, bytes3);
+                rgbValuesBlue[counter + 1] = 0;
+                rgbValuesBlue[counter + 2] = 0;
+
+                // 0 - blue, 1 - green, 2 - red
+            }
+			// Copy the RGB values back to the bitmap
+			System.Runtime.InteropServices.Marshal.Copy(rgbValuesRed, 0, ptr1, bytes1);
+            System.Runtime.InteropServices.Marshal.Copy(rgbValuesGreen, 0, ptr2, bytes2);
+            System.Runtime.InteropServices.Marshal.Copy(rgbValuesBlue, 0, ptr3, bytes3);
 
             // Unlock the bits.
             bmp1.UnlockBits(bmpData1);
@@ -216,47 +107,75 @@ namespace Test2
             bmp3.UnlockBits(bmpData3);
 
             int i = 0;
-            for (int counter = 0; counter < rgbValues1.Length; counter += 3)
-            {
-                bmp1.SetPixel(i % bmp1.Width, i / bmp1.Width,
-                    Color.FromArgb((byte)(rgbValues1[counter + 2]), (byte)(rgbValues1[counter + 1]), (byte)(rgbValues1[counter])));
-
+			/*for (int counter = 0; counter < rgbValuesRed.Length; counter += 3)
+			{
+				bmp1.SetPixel(i % bmp1.Width, i / bmp1.Width,
+					Color.FromArgb(rgbValuesRed[counter+2], rgbValuesRed[counter + 1], rgbValuesRed[counter]));
                 bmp2.SetPixel(i % bmp2.Width, i / bmp2.Width,
-                    ColorFromHSV(hsvValues2[counter], hsvValues2[counter + 1], hsvValues2[counter + 2]));
-
-
-               // bmp3.SetPixel(i % bmp3.Width, i / bmp3.Width,
-              //      ColorFromHSV((hsvValues3[counter + 2]), (hsvValues3[counter + 1]), (hsvValues3[counter])));
+                    Color.FromArgb(rgbValuesGreen[counter + 2], rgbValuesGreen[counter + 1], rgbValuesGreen[counter]));
+                bmp3.SetPixel(i % bmp3.Width, i / bmp3.Width,
+                    Color.FromArgb(rgbValuesBlue[counter + 2], rgbValuesBlue[counter + 1], rgbValuesBlue[counter]));
                 i++;
 
-            }
-            pictureBox1.Refresh();
+			}*/
+
+			countRed = new int[256];
+            countGreen = new int[256];
+            countBlue = new int[256];
+            countColors();
+
+
+			pictureBox1.Refresh();
+            this.pictureBox2.Visible = true;
             pictureBox2.Refresh();
+
             pictureBox3.Refresh();
+            this.pictureBox4.Visible = true;
+            pictureBox4.Refresh();
 
+            pictureBox5.Refresh();
+            this.pictureBox6.Visible = true;
+            pictureBox6.Refresh();
         }
 
+        private void countColors()
+		{
+			for (int counter = 0; counter < rgbValuesRed.Length; counter += 3)
+            {
+                countBlue[rgbValuesBlue[counter]]++;
+                countGreen[rgbValuesGreen[counter + 1]]++;
+                countRed[rgbValuesRed[counter + 2]]++;
+            }
+		}
 
-        public Form1()
+        private void pictureBox2_Paint(object sender, PaintEventArgs e)
         {
-            InitializeComponent();
-
-            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
-
-            textbox_SetText();
-
-
+            System.Drawing.Graphics g;
+            g = e.Graphics;
+            int h = this.pictureBox2.Height;
+            Pen myPen = new Pen(System.Drawing.Color.Red, 1);
+            for (int i = 0; i < 256; ++i)
+                g.DrawLine(myPen, i, h, i, h - (countRed[i]) / width);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void pictureBox4_Paint(object sender, PaintEventArgs e)
         {
-            openFileDialog1.ShowDialog();
+            System.Drawing.Graphics g;
+            g = e.Graphics;
+            int h = this.pictureBox4.Height;
+            Pen myPen = new Pen(System.Drawing.Color.Green, 1);
+            for (int i = 0; i < 256; ++i)
+                g.DrawLine(myPen, i, h, i, h - (countGreen[i]) / width);
         }
 
-
-
+        private void pictureBox6_Paint(object sender, PaintEventArgs e)
+        {
+            System.Drawing.Graphics g;
+            g = e.Graphics;
+            int h = this.pictureBox6.Height;
+            Pen myPen = new Pen(System.Drawing.Color.Blue, 1);
+            for (int i = 0; i < 256; ++i)
+                g.DrawLine(myPen, i, h, i, h - (countBlue[i]) / width);
+        }
     }
 }
-
